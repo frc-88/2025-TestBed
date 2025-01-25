@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -18,6 +19,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -39,17 +41,24 @@ public class Climber extends SubsystemBase {
   private PIDPreferenceConstants p_pivotPidPreferenceConstants = new PIDPreferenceConstants("Climber/pivotPID", 0.0, 0.0, 0.0,
       0.12, 0.0, 0.0, 0.0, 0.0);
 
+  private PIDPreferenceConstants p_gasmotorPID = new PIDPreferenceConstants("Climber/GasMotorPID", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+
   private DoublePreferenceConstant p_pivotLimit = new DoublePreferenceConstant("Climber/PivotLimit", 100);
   private DoublePreferenceConstant p_gripperLimit = new DoublePreferenceConstant("Climber/GripperLimit", 100);
   private DoublePreferenceConstant p_gripperStowSpeed = new DoublePreferenceConstant("Climber/GripperStowSpeed",0.01);
   private DoublePreferenceConstant p_pivotStowSpeed = new DoublePreferenceConstant("Climber/PivotStowSpeed", 0.01);
+  private DoublePreferenceConstant p_gasmotorLimit = new DoublePreferenceConstant("Climber/GasMotorLimit", 10.0);
 
   private DoublePreferenceConstant p_gripperClosedTorque = new DoublePreferenceConstant("Climber/gripperClosedTorque", 0.0);
   private DoublePreferenceConstant p_gripperStallTorque = new DoublePreferenceConstant("Climber/gripperStallTorque", 0.0);
   private DoublePreferenceConstant p_pivotTorque = new DoublePreferenceConstant("Climber/PivotTorque", 0.0);
+  private DoublePreferenceConstant p_gasmotorSpeed = new DoublePreferenceConstant("Climber/Gasmotorspeed", 0.2);
+  private DoublePreferenceConstant p_gasmotorPositionInches = new DoublePreferenceConstant("Climber/GasMotorPositionInches", 0.2);
+  private DoublePreferenceConstant p_gasmotorPositionRotations = new DoublePreferenceConstant("Climber/GasMotorPositionRotations", 0.2);
 
   private final TalonFX m_pivot = new TalonFX(Constants.CLIMBER_PIVOT_MOTOR, Constants.RIO_CANBUS);
   private final TalonFX m_gripper = new TalonFX(Constants.CLIMBER_GRIPPER_MOTOR, Constants.RIO_CANBUS);
+  private final TalonFX m_gasmotor = new TalonFX(Constants.CLIMBER_GAS_MOTOR, Constants.RIO_CANBUS);
 
   private boolean isCalibrated = false;
   private double kPivotMotorRotationsToClimberPosition = Constants.PIVOT_MOTOR_ROTATIONS_TO_CLIMBER_POSITION;
@@ -61,9 +70,10 @@ public class Climber extends SubsystemBase {
   private TorqueCurrentFOC gripperClosedtorque = new TorqueCurrentFOC(p_gripperClosedTorque.getValue()).withMaxAbsDutyCycle(0.75);
   private TorqueCurrentFOC gripperStalltorque = new TorqueCurrentFOC(p_gripperStallTorque.getValue()).withMaxAbsDutyCycle(0.25);
   private TorqueCurrentFOC pivottorque = new TorqueCurrentFOC(p_pivotTorque.getValue()).withMaxAbsDutyCycle(0.25);
-  
-  private Debouncer climberDebouncer = new Debouncer(1.0);
+  private PositionDutyCycle position = new PositionDutyCycle(0.0);
 
+  private Debouncer climberDebouncer = new Debouncer(1.0);
+ 
   
     /** Creates a new Climber. */
     public Climber() {
@@ -75,6 +85,7 @@ public class Climber extends SubsystemBase {
     private void configureTalons() {
       TalonFXConfiguration pivotcfg = new TalonFXConfiguration();
       TalonFXConfiguration grippercfg = new TalonFXConfiguration();
+      TalonFXConfiguration gasmotorcfg = new TalonFXConfiguration();
   
       MotionMagicConfigs pivot_mm = pivotcfg.MotionMagic;
       MotionMagicConfigs gripper_mm = grippercfg.MotionMagic;
@@ -88,7 +99,8 @@ public class Climber extends SubsystemBase {
       pivot_mm.MotionMagicJerk = p_pivotmaxJerk.getValue();
   
       Slot0Configs pivotslot0 = pivotcfg.Slot0;
-      Slot0Configs gripperslot0 = pivotcfg.Slot0;
+      Slot0Configs gripperslot0 = grippercfg.Slot0;
+      Slot0Configs gasmotorslot0 = gasmotorcfg.Slot0;
 
       gripperslot0.kP = p_gripperPidPreferenceConstants.getKP().getValue();
       gripperslot0.kI = p_gripperPidPreferenceConstants.getKI().getValue();
@@ -101,7 +113,13 @@ public class Climber extends SubsystemBase {
       pivotslot0.kD = p_pivotPidPreferenceConstants.getKD().getValue();
       pivotslot0.kV = p_pivotPidPreferenceConstants.getKF().getValue();
       pivotslot0.kS = p_pivotPidPreferenceConstants.getKS().getValue();// Approximately 0.25V to get the mechanism moving
-  
+      
+      gasmotorslot0.kP = p_gasmotorPID.getKP().getValue();
+      gasmotorslot0.kI = p_gasmotorPID.getKI().getValue();
+      gasmotorslot0.kD = p_gasmotorPID.getKD().getValue();
+      gasmotorslot0.kV = p_gasmotorPID.getKF().getValue();
+      gasmotorslot0.kS = p_gasmotorPID.getKS().getValue();
+
       SoftwareLimitSwitchConfigs softLimits = pivotcfg.SoftwareLimitSwitch;
       softLimits.ReverseSoftLimitEnable = true;
       softLimits.ReverseSoftLimitThreshold = p_pivotLimit.getValue();
@@ -113,9 +131,23 @@ public class Climber extends SubsystemBase {
       gripperSoftLimits.ForwardSoftLimitEnable = false;
       gripperSoftLimits.ForwardSoftLimitThreshold = p_gripperLimit.getValue();
 
+      SoftwareLimitSwitchConfigs gasmotorsoftlimtis = gasmotorcfg.SoftwareLimitSwitch;
+      gasmotorsoftlimtis.ForwardSoftLimitEnable = true;
+      gasmotorsoftlimtis.ForwardSoftLimitThreshold = (p_gasmotorLimit.getValue() / Constants.GAS_MOTOR_ROTATIONS_TO_LENGTH);
+      gasmotorcfg.CurrentLimits.StatorCurrentLimitEnable = false;
+      gasmotorcfg.CurrentLimits.SupplyCurrentLimitEnable = false;
+      //gasmotorcfg.CurrentLimits.SupplyCurrentLimit = 50.0;
       m_pivot.getConfigurator().apply(pivotcfg);
   
       m_gripper.getConfigurator().apply(grippercfg);
+
+      m_gasmotor.getConfigurator().apply(gasmotorcfg);
+
+      m_gasmotor.setNeutralMode(NeutralModeValue.Brake);
+    }
+
+    public void gasMotorBrakeMode() {
+      m_gasmotor.setNeutralMode(NeutralModeValue.Brake);
     }
 
     public void pivotNeutralGrabberOpen() {
@@ -153,6 +185,18 @@ public class Climber extends SubsystemBase {
     return m_pivot.getPosition().getValueAsDouble() * kPivotMotorRotationsToClimberPosition;
   }
 
+  public double getPositionGasMotor() {
+    return m_gasmotor.getPosition().getValueAsDouble();
+  }
+
+  public void setGasMotorPostionInches() {
+    m_gasmotor.setControl(position.withPosition((p_gasmotorPositionInches.getValue() / Constants.GAS_MOTOR_ROTATIONS_TO_LENGTH) * 1.615));
+  }
+
+  public void setGasMotorPositionRotations() {
+    m_gasmotor.setControl(position.withPosition(p_gasmotorPositionRotations.getValue()));
+  }
+
   public void holdPostion() {
     m_gripper.setControl(new DutyCycleOut(0.0));
     m_pivot.setControl(new DutyCycleOut(0.0));
@@ -171,6 +215,18 @@ public class Climber extends SubsystemBase {
 
   public void setPivotPosition(double position) {
     m_pivot.setControl(m_motionMagic.withPosition(position / kPivotMotorRotationsToClimberPosition));
+  }
+
+  public void setGasMotorSpeed() {
+    m_gasmotor.setControl(new DutyCycleOut(p_gasmotorSpeed.getValue()));
+  }
+
+  public void stopGasMotor() {
+    m_gasmotor.setControl(new DutyCycleOut(0.0));
+  }
+
+  public void calibrateGasMotor() {
+    m_gasmotor.setPosition(0.0);
   }
 
   public void calibrate() {
@@ -198,9 +254,35 @@ public class Climber extends SubsystemBase {
     return new RunCommand(() -> pivotUpGrabberClosed(), this);
   }
 
+  public Command runGasMotorInchesFactory() {
+    return new RunCommand(() -> setGasMotorPostionInches(), this);
+  }
+
+  public Command runGasMotorRotationsFactory() {
+    return new RunCommand(() -> setGasMotorPositionRotations(), this);
+  }
+
+  public Command stopGasMotorFactory() {
+    return new RunCommand(() -> stopGasMotor(), this);
+  }
+
+  public Command gasMotorBrakeModeFactory() {
+    return new RunCommand(() -> gasMotorBrakeMode(), this);
+  }
+
+  public Command calibrateGasMotorFactory() {
+    return new InstantCommand(() -> calibrateGasMotor(), this);
+  }
+
+  public Command setPositionFactory() {
+    return new RunCommand(() -> setGasMotorPostionInches(), this);
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("pivot position", getPosition());
+    SmartDashboard.putNumber("gas motor position", getPositionGasMotor());
+    SmartDashboard.putNumber("gas motor desired position", p_gasmotorPositionInches.getValue() / Constants.GAS_MOTOR_ROTATIONS_TO_LENGTH);
   }
 }

@@ -10,10 +10,14 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.Tracer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
@@ -39,6 +43,8 @@ public class RobotContainer {
 
     public Climber climber = new Climber();
 
+    //public Trigger stop = new Trigger(() -> RobotState.isDisabled() && climber.getPositionGasMotor() < 5.0);
+
     public RobotContainer() {
         configureBindings();
         configureButtons();
@@ -48,11 +54,16 @@ public class RobotContainer {
         SmartDashboard.putData("PivotNeutralGrabberOpen", climber.pivotNeutralGrabberOpenFactory());
         SmartDashboard.putData("PivotNeutralGrabberClosed", climber.pivotNeutralGrabberClosedFactory());
         SmartDashboard.putData("PivotUpGrabberClosed", climber.pivotUpGrabberClosedFactory());
+        SmartDashboard.putData("GasMotorRotations", climber.runGasMotorRotationsFactory());
+        SmartDashboard.putData("StopGasMotor", climber.stopGasMotorFactory());
+        SmartDashboard.putData("CalibrateGasMotor", climber.calibrateGasMotorFactory().ignoringDisable(true));
+        SmartDashboard.putData("SetPositionInches", climber.setPositionFactory());
     }
 
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
+        //stop.onTrue(climber.gasMotorBrakeModeFactory());
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
