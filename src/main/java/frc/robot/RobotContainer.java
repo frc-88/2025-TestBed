@@ -10,12 +10,14 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Tracer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -43,6 +45,8 @@ public class RobotContainer {
 
     public Climber climber = new Climber();
 
+    private Trigger onDisable = new Trigger(()-> RobotState.isDisabled() && climber.getPositionGasMotor() < 70.0);
+
     //public Trigger stop = new Trigger(() -> RobotState.isDisabled() && climber.getPositionGasMotor() < 5.0);
 
     public RobotContainer() {
@@ -58,9 +62,16 @@ public class RobotContainer {
         SmartDashboard.putData("StopGasMotor", climber.stopGasMotorFactory());
         SmartDashboard.putData("CalibrateGasMotor", climber.calibrateGasMotorFactory().ignoringDisable(true));
         SmartDashboard.putData("SetPositionInches", climber.setPositionFactory());
+        SmartDashboard.putData("Calibrate Encoder", climber.calibrateEncoderFactory().ignoringDisable(true));
+        SmartDashboard.putData("Set Coast", climber.setNeutralModeFactory().ignoringDisable(true));
+        SmartDashboard.putData("Set Brake", climber.gasMotorBrakeModeFactory().ignoringDisable(true));
+        SmartDashboard.putData("Prep Climber", climber.prepClimber());
     }
 
     private void configureBindings() {
+        climber.shouldBrake().onTrue(climber.gasMotorBrakeModeFactory().ignoringDisable(true)).onFalse(climber.setNeutralModeFactory().ignoringDisable(true));
+        climber.shouldGripperClose().onTrue(climber.pivotNeutralGrabberClosedFactory());
+        //onDisable.whileTrue(climber.gasMotorBrakeModeFactory()).onTrue(climber.gasMotorBrakeModeFactory());
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         //stop.onTrue(climber.gasMotorBrakeModeFactory());
@@ -89,6 +100,14 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+    }
+
+    public void teleopInit() {
+        climber.shouldBrake().onTrue(climber.gasMotorBrakeModeFactory().ignoringDisable(true));
+    }
+
+    public void disableInit() {
+        //climber.gasMotorNeutralMode();
     }
 
     public Command getAutonomousCommand() {
