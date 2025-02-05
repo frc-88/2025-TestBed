@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Elevator;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -47,6 +48,7 @@ public class RobotContainer {
 
     private Trigger onDisable = new Trigger(()-> RobotState.isDisabled() && climber.getPositionGasMotor() < 70.0);
 
+    public Elevator m_elevator = new Elevator();
     //public Trigger stop = new Trigger(() -> RobotState.isDisabled() && climber.getPositionGasMotor() < 5.0);
 
     public RobotContainer() {
@@ -66,6 +68,12 @@ public class RobotContainer {
         SmartDashboard.putData("Set Coast", climber.setNeutralModeFactory().ignoringDisable(true));
         SmartDashboard.putData("Set Brake", climber.gasMotorBrakeModeFactory().ignoringDisable(true));
         SmartDashboard.putData("Prep Climber", climber.prepClimber());
+        
+        SmartDashboard.putData("Calibrate", m_elevator.calibrateElevator());
+        SmartDashboard.putData("CalibrateBoth", m_elevator.calibrateFactory());
+        SmartDashboard.putData("Set Position", m_elevator.setPostionFactory());
+        SmartDashboard.putData("Slow Speed", m_elevator.setSlowSpeedFactory());
+        SmartDashboard.putData("Stop", m_elevator.stopFactory());
     }
 
     private void configureBindings() {

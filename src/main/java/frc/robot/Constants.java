@@ -14,6 +14,10 @@ public class Constants {
     public static final int CLIMBER_LEFT_CANRANGE = 0;
     public static final int CLIMBER_MIDDLE_CANRANGE = 10;
     public static final int CLIMBER_RIGHT_CANRANGE = 3;
+    public static final int ELEVATOR_FRONT_MOTOR = 3;
+    public static final int ELEVATOR_BACK_MOTOR = 1;
+    public static final int ELEVATOR_PIVOT_MOTOR = 1;
+    public static final double ELEVATOR_ROTATIONS_TO_INCHES = 0.885;
     public static final double PIVOT_MOTOR_ROTATIONS_TO_CLIMBER_POSITION = (360.0 / 196.0);
     public static final double GRIPPER_MOTOR_ROTATIONS_TO_POSITION = (360 / 49.0);
     public static final double GAS_MOTOR_ROTATIONS_TO_LENGTH = (1.39 / 28.0);
