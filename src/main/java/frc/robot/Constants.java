@@ -23,7 +23,7 @@ public class Constants {
     // ARMEVATOR
     public static final int ELEVATOR_MAIN_MOTOR = 3;
     public static final int ELEVATOR_FOLLOWER_MOTOR = 1;
-    public static final int ELEVATOR_PIVOT_MOTOR = 7;
+    public static final int ELEVATOR_ARM_MOTOR = 7;
     public static final int ELEVATOR_GRABBER_MOTOR = 5;
     
     public static final double ELEVATOR_ROTATIONS_TO_INCHES = 0.885;

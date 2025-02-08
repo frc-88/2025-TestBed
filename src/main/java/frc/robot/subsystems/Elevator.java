@@ -20,16 +20,20 @@ public class Elevator  extends SubsystemBase {
 
     private TalonFX m_elevatorFollower = new TalonFX(Constants.ELEVATOR_FOLLOWER_MOTOR, "rio");
     private TalonFX m_elevatorMain = new TalonFX(Constants.ELEVATOR_MAIN_MOTOR, "rio");
-    //private TalonFX m_pivot = new TalonFX(Constants.ELEVATOR_PIVOT_MOTOR, "rio");
+    private TalonFX m_arm = new TalonFX(Constants.ELEVATOR_ARM_MOTOR, "rio");
 
     private final Debouncer elevatorDebouncer = new Debouncer(1.0);
 
     private PIDPreferenceConstants elevatorPID = new PIDPreferenceConstants("Elevator/MainMotorPID");
-    private PIDPreferenceConstants pivotPID = new PIDPreferenceConstants("Elevator/PivotMotorPID");
-    private DoublePreferenceConstant p_requestInches = new DoublePreferenceConstant("Elevator/TargetPositionInches", 0.0);
-    private DoublePreferenceConstant p_velocity = new DoublePreferenceConstant("Elevator/MotionMagicVelocity", 0.0);
-    private DoublePreferenceConstant p_acceleration = new DoublePreferenceConstant("Elevator/MotionMagicAcceleration", 0.0);
-    private DoublePreferenceConstant p_jerk = new DoublePreferenceConstant("Elevator/MotionMagicJerk", 0.0);
+    private PIDPreferenceConstants armPID = new PIDPreferenceConstants("Armevator/Elevator/ArmMotorPID");
+    private DoublePreferenceConstant p_requestInches = new DoublePreferenceConstant("Armevator/Elevator/TargetPositionInches", 0.0);
+    private DoublePreferenceConstant p_elevatorMaxVelocity = new DoublePreferenceConstant("Armevator/Elevator/MotionMagicVelocity", 0.0);
+    private DoublePreferenceConstant p_elevatorMaxAcceleration = new DoublePreferenceConstant("Armevator/Elevator/MotionMagicAcceleration", 0.0);
+    private DoublePreferenceConstant p_elevatorJerk = new DoublePreferenceConstant("Armevator/Elevator/MotionMagicJerk", 0.0);
+    private DoublePreferenceConstant p_ArmMaxVelocity = new DoublePreferenceConstant("Armevator/Arm/MotionMagicVelocity", 0.0);
+    private DoublePreferenceConstant p_ArmMaxAcceleration = new DoublePreferenceConstant("Armevator/Arm/MotionMagicAcceleration", 0.0);
+    private DoublePreferenceConstant p_ArmJerk = new DoublePreferenceConstant("Armevator/Arm/MotionMagicJerk", 0.0);
+
     private MotionMagicVoltage motionmagicrequest = new MotionMagicVoltage(0.0);
     
     public Elevator() {
@@ -39,23 +43,29 @@ public class Elevator  extends SubsystemBase {
     public void configureTalons() {
         TalonFXConfiguration maincfg = new TalonFXConfiguration();
         TalonFXConfiguration followercfg = new TalonFXConfiguration();
-        TalonFXConfiguration pivotcfg = new TalonFXConfiguration();
+        TalonFXConfiguration armcfg = new TalonFXConfiguration();
 
         maincfg.Slot0.kP = elevatorPID.getKP().getValue();
         maincfg.Slot0.kI = elevatorPID.getKI().getValue();
         maincfg.Slot0.kD = elevatorPID.getKD().getValue();
         maincfg.Slot0.kV = elevatorPID.getKF().getValue();
-        maincfg.MotionMagic.MotionMagicCruiseVelocity = p_velocity.getValue();
-        maincfg.MotionMagic.MotionMagicAcceleration = p_acceleration.getValue();
-        maincfg.MotionMagic.MotionMagicJerk = p_jerk.getValue();
+        
+        maincfg.MotionMagic.MotionMagicCruiseVelocity = p_elevatorMaxVelocity.getValue();
+        maincfg.MotionMagic.MotionMagicAcceleration = p_elevatorMaxAcceleration.getValue();
+        maincfg.MotionMagic.MotionMagicJerk = p_elevatorJerk.getValue();
 
-        pivotcfg.Slot0.kP = pivotPID.getKP().getValue();
-        pivotcfg.Slot0.kI = pivotPID.getKI().getValue();
-        pivotcfg.Slot0.kD = pivotPID.getKD().getValue();
+        armcfg.Slot0.kP = armPID.getKP().getValue();
+        armcfg.Slot0.kI = armPID.getKI().getValue();
+        armcfg.Slot0.kD = armPID.getKD().getValue();
+        armcfg.Slot0.kV = armPID.getKF().getValue();
+
+        armcfg.MotionMagic.MotionMagicCruiseVelocity = p_ArmMaxVelocity.getValue();
+        armcfg.MotionMagic.MotionMagicAcceleration = p_ArmMaxAcceleration.getValue();
+        armcfg.MotionMagic.MotionMagicJerk = p_ArmJerk.getValue();
 
         m_elevatorMain.getConfigurator().apply(maincfg);
         m_elevatorFollower.getConfigurator().apply(followercfg);
-        // m_pivot.getConfigurator().apply(pivotcfg);
+        m_arm.getConfigurator().apply(armcfg);
 
         m_elevatorFollower.setControl(new Follower(Constants.ELEVATOR_MAIN_MOTOR, false));
     }
