@@ -69,7 +69,7 @@ public class RobotContainer {
         SmartDashboard.putData("Set Brake", climber.gasMotorBrakeModeFactory().ignoringDisable(true));
         SmartDashboard.putData("Prep Climber", climber.prepClimber());
         
-        SmartDashboard.putData("Calibrate", m_elevator.calibrateElevator());
+        SmartDashboard.putData("Calibrate", m_elevator.calibrateElevatorFactory());
         SmartDashboard.putData("CalibrateBoth", m_elevator.calibrateFactory());
         SmartDashboard.putData("Set Position", m_elevator.setPostionFactory());
         SmartDashboard.putData("Slow Speed", m_elevator.setSlowSpeedFactory());
