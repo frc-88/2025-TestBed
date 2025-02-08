@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
+import com.ctre.phoenix6.configs.CommutationConfigs;
 import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
@@ -10,6 +11,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
@@ -95,6 +97,7 @@ public class Armevator extends SubsystemBase {
         TalonFXSConfiguration manipulatorConfiguration = new TalonFXSConfiguration();
         manipulatorConfiguration.CurrentLimits.SupplyCurrentLimit = p_manipulatorCurrentLimit.getValue();
         manipulatorConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
+        manipulatorConfiguration.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         manipulatorConfiguration.OpenLoopRamps = new OpenLoopRampsConfigs().withDutyCycleOpenLoopRampPeriod(0);
         m_manipulator.getConfigurator().apply(manipulatorConfiguration);
 
