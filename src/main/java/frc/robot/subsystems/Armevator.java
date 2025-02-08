@@ -238,5 +238,9 @@ public class Armevator extends SubsystemBase {
         SmartDashboard.putNumber("CAN Range Left Distance", Units.metersToInches(m_canRangeLeft.getDistance().getValueAsDouble()));
         SmartDashboard.putNumber("CAN Range Middle Distance", Units.metersToInches(m_canRangeMiddle.getDistance().getValueAsDouble()));
         SmartDashboard.putNumber("CAN Range Right Distance", Units.metersToInches(m_canRangeRight.getDistance().getValueAsDouble()));
+        SmartDashboard.putNumber("Armevator Setpoint", m_elevatorMain.getClosedLoopReference().getValueAsDouble());
+        SmartDashboard.putNumber("Armevator Velocity", m_elevatorMain.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("Arm Setpoint", m_arm.getClosedLoopReference().getValueAsDouble());
+        SmartDashboard.putNumber("Arm Velocity", m_arm.getVelocity().getValueAsDouble());
     }
 }
