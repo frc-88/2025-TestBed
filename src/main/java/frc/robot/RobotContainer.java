@@ -25,7 +25,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Armevator;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -48,7 +48,7 @@ public class RobotContainer {
 
     private Trigger onDisable = new Trigger(()-> RobotState.isDisabled() && climber.getPositionGasMotor() < 70.0);
 
-    public Elevator m_elevator = new Elevator();
+    public Armevator m_armevator = new Armevator();
     //public Trigger stop = new Trigger(() -> RobotState.isDisabled() && climber.getPositionGasMotor() < 5.0);
 
     public RobotContainer() {
@@ -69,10 +69,11 @@ public class RobotContainer {
         SmartDashboard.putData("Set Brake", climber.gasMotorBrakeModeFactory().ignoringDisable(true));
         SmartDashboard.putData("Prep Climber", climber.prepClimber());
         
-        SmartDashboard.putData("Calibrate Elevator", m_elevator.calibrateElevatorFactory());
-        SmartDashboard.putData("Set Position Elevator", m_elevator.setPostionFactory());
-        SmartDashboard.putData("Slow Speed Elevator", m_elevator.setSlowSpeedFactory());
-        SmartDashboard.putData("Stop Elevator", m_elevator.stopFactory());
+        SmartDashboard.putData("Calibrate Elevator", m_armevator.calibrateElevatorFactory());
+        SmartDashboard.putData("Calibrate Arm", m_armevator.calibrateArmFactory());
+        SmartDashboard.putData("Set Position Elevator", m_armevator.setPostionFactory());
+        SmartDashboard.putData("Slow Speed Elevator", m_armevator.setSlowSpeedFactory());
+        SmartDashboard.putData("Stop Elevator", m_armevator.stopFactory());
     }
 
     private void configureBindings() {

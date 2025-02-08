@@ -16,7 +16,7 @@ import frc.robot.Constants;
 import frc.robot.util.preferenceconstants.DoublePreferenceConstant;
 import frc.robot.util.preferenceconstants.PIDPreferenceConstants;
 
-public class Elevator  extends SubsystemBase {
+public class Armevator  extends SubsystemBase {
 
     private TalonFX m_elevatorFollower = new TalonFX(Constants.ELEVATOR_FOLLOWER_MOTOR, "rio");
     private TalonFX m_elevatorMain = new TalonFX(Constants.ELEVATOR_MAIN_MOTOR, "rio");
@@ -36,7 +36,7 @@ public class Elevator  extends SubsystemBase {
 
     private MotionMagicVoltage motionmagicrequest = new MotionMagicVoltage(0.0);
     
-    public Elevator() {
+    public Armevator() {
         configureTalons();
     }
 
