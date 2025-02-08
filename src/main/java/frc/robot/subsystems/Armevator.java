@@ -1,12 +1,15 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -16,29 +19,62 @@ import frc.robot.Constants;
 import frc.robot.util.preferenceconstants.DoublePreferenceConstant;
 import frc.robot.util.preferenceconstants.PIDPreferenceConstants;
 
-public class Armevator  extends SubsystemBase {
+public class Armevator extends SubsystemBase {
     private TalonFX m_elevatorMain = new TalonFX(Constants.ELEVATOR_MAIN_MOTOR, Constants.RIO_CANBUS);
     private TalonFX m_elevatorFollower = new TalonFX(Constants.ELEVATOR_FOLLOWER_MOTOR, Constants.RIO_CANBUS);
     private TalonFX m_arm = new TalonFX(Constants.ELEVATOR_ARM_MOTOR, Constants.RIO_CANBUS);
 
+    private final CANrange m_canRangeLeft = new CANrange(Constants.ARM_LEFT_CANRANGE, Constants.RIO_CANBUS);
+    private final CANrange m_canRangeMiddle = new CANrange(Constants.ARM_MIDDLE_CANRANGE, Constants.RIO_CANBUS);
+    private final CANrange m_canRangeRight = new CANrange(Constants.ARM_RIGHT_CANRANGE, Constants.RIO_CANBUS);
+
     private final Debouncer elevatorDebouncer = new Debouncer(1.0);
 
     private PIDPreferenceConstants elevatorPID = new PIDPreferenceConstants("Armevator/Elevator/PID");
-    private DoublePreferenceConstant p_elevatorMaxVelocity = new DoublePreferenceConstant("Armevator/Elevator/MotionMagicVelocity", 0.0);
-    private DoublePreferenceConstant p_elevatorMaxAcceleration = new DoublePreferenceConstant("Armevator/Elevator/MotionMagicAcceleration", 0.0);
-    private DoublePreferenceConstant p_elevatorJerk = new DoublePreferenceConstant("Armevator/Elevator/MotionMagicJerk", 0.0);
-    private DoublePreferenceConstant p_elevatorTargetInches = new DoublePreferenceConstant("Armevator/Elevator/TargetPositionInches", 0.0);
+    private DoublePreferenceConstant p_elevatorMaxVelocity = new DoublePreferenceConstant(
+            "Armevator/Elevator/MotionMagicVelocity", 0.0);
+    private DoublePreferenceConstant p_elevatorMaxAcceleration = new DoublePreferenceConstant(
+            "Armevator/Elevator/MotionMagicAcceleration", 0.0);
+    private DoublePreferenceConstant p_elevatorJerk = new DoublePreferenceConstant("Armevator/Elevator/MotionMagicJerk",
+            0.0);
+    private DoublePreferenceConstant p_elevatorTargetInches = new DoublePreferenceConstant(
+            "Armevator/Elevator/TargetPositionInches", 0.0);
 
     private PIDPreferenceConstants armPID = new PIDPreferenceConstants("Armevator/Arm/PID");
-    private DoublePreferenceConstant p_armMaxVelocity = new DoublePreferenceConstant("Armevator/Arm/MotionMagicVelocity", 0.0);
-    private DoublePreferenceConstant p_armMaxAcceleration = new DoublePreferenceConstant("Armevator/Arm/MotionMagicAcceleration", 0.0);
+    private DoublePreferenceConstant p_armMaxVelocity = new DoublePreferenceConstant(
+            "Armevator/Arm/MotionMagicVelocity", 0.0);
+    private DoublePreferenceConstant p_armMaxAcceleration = new DoublePreferenceConstant(
+            "Armevator/Arm/MotionMagicAcceleration", 0.0);
     private DoublePreferenceConstant p_armJerk = new DoublePreferenceConstant("Armevator/Arm/MotionMagicJerk", 0.0);
-    private DoublePreferenceConstant p_armTargetDegrees = new DoublePreferenceConstant("Armevator/Arm/TargetPositionDegrees", 0.0);
+    private DoublePreferenceConstant p_armTargetDegrees = new DoublePreferenceConstant(
+            "Armevator/Arm/TargetPositionDegrees", 0.0);
 
     private MotionMagicVoltage motionmagicrequest = new MotionMagicVoltage(0.0);
-    
+
     public Armevator() {
         configureTalons();
+
+        CANrangeConfiguration canRangemiddlecfg = new CANrangeConfiguration();
+        CANrangeConfiguration canRangeleftcfg = new CANrangeConfiguration();
+        CANrangeConfiguration canRangerightcfg = new CANrangeConfiguration();
+        canRangemiddlecfg.FovParams.FOVRangeX = 6.5;
+        canRangeleftcfg.FovParams.FOVRangeX = 6.5;
+        canRangerightcfg.FovParams.FOVRangeX = 6.5;
+        canRangemiddlecfg.FovParams.FOVRangeY = 27.0;
+        canRangeleftcfg.FovParams.FOVRangeY = 27.0;
+        canRangerightcfg.FovParams.FOVRangeY = 27.0;
+
+        canRangeleftcfg.ToFParams.UpdateFrequency = 50;
+        canRangerightcfg.ToFParams.UpdateFrequency = 50;
+        canRangemiddlecfg.ToFParams.UpdateFrequency = 50;
+
+        canRangeleftcfg.ProximityParams.ProximityThreshold = 0.5;
+        canRangemiddlecfg.ProximityParams.ProximityThreshold = 0.5;
+        canRangerightcfg.ProximityParams.ProximityThreshold = 0.5;
+
+        m_canRangeLeft.getConfigurator().apply(canRangeleftcfg);
+        m_canRangeRight.getConfigurator().apply(canRangerightcfg);
+        m_canRangeMiddle.getConfigurator().apply(canRangemiddlecfg);
     }
 
     public void configureTalons() {
@@ -50,7 +86,7 @@ public class Armevator  extends SubsystemBase {
         maincfg.Slot0.kI = elevatorPID.getKI().getValue();
         maincfg.Slot0.kD = elevatorPID.getKD().getValue();
         maincfg.Slot0.kV = elevatorPID.getKF().getValue();
-        
+
         maincfg.MotionMagic.MotionMagicCruiseVelocity = p_elevatorMaxVelocity.getValue();
         maincfg.MotionMagic.MotionMagicAcceleration = p_elevatorMaxAcceleration.getValue();
         maincfg.MotionMagic.MotionMagicJerk = p_elevatorJerk.getValue();
@@ -76,7 +112,8 @@ public class Armevator  extends SubsystemBase {
     }
 
     public void armSetPosition() {
-        m_arm.setControl(motionmagicrequest.withPosition(p_armTargetDegrees.getValue() / Constants.ARM_ROTATIONS_TO_DEGREES));
+        m_arm.setControl(
+                motionmagicrequest.withPosition(p_armTargetDegrees.getValue() / Constants.ARM_ROTATIONS_TO_DEGREES));
     }
 
     public void elevatorStop() {
@@ -117,12 +154,13 @@ public class Armevator  extends SubsystemBase {
 
     public Command calibrateElevatorFactory() {
         return new RunCommand(() -> elevatorSetCalibrateSpeed(), this)
-        .until(() -> elevatorDebouncer.calculate(Math.abs(m_elevatorMain.getVelocity().getValueAsDouble())  < 0.02))
-        .andThen(() -> {
-            elevatorStop();
-            elevatorCalibrate();
-        })
-        .beforeStarting(() -> elevatorDebouncer.calculate(false));
+                .until(() -> elevatorDebouncer
+                        .calculate(Math.abs(m_elevatorMain.getVelocity().getValueAsDouble()) < 0.02))
+                .andThen(() -> {
+                    elevatorStop();
+                    elevatorCalibrate();
+                })
+                .beforeStarting(() -> elevatorDebouncer.calculate(false));
     }
 
     public Command stopElevatorFactory() {
@@ -135,7 +173,7 @@ public class Armevator  extends SubsystemBase {
 
     public Command setElevatorPostionFactory() {
         return new RunCommand(() -> elevatorSetPosition(p_elevatorTargetInches.getValue()), this);
-    }    
+    }
 
     public Command stopArmFactory() {
         return new RunCommand(() -> armStop(), this);
@@ -147,12 +185,14 @@ public class Armevator  extends SubsystemBase {
 
     public Command setArmPostionFactory() {
         return new RunCommand(() -> elevatorSetPosition(p_armTargetDegrees.getValue()), this);
-    }    
+    }
 
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Elevator Positon", m_elevatorMain.getPosition().getValueAsDouble() * Constants.ELEVATOR_ROTATIONS_TO_INCHES);
         SmartDashboard.putNumber("Arm Position", m_arm.getPosition().getValueAsDouble() * Constants.ARM_ROTATIONS_TO_DEGREES);
+        SmartDashboard.putNumber("CAN Range Left Distance", Units.metersToInches(m_canRangeLeft.getDistance().getValueAsDouble()));
+        SmartDashboard.putNumber("CAN Range Middle Distance", Units.metersToInches(m_canRangeMiddle.getDistance().getValueAsDouble()));
+        SmartDashboard.putNumber("CAN Range Right Distance", Units.metersToInches(m_canRangeRight.getDistance().getValueAsDouble()));
     }
 }
- 
