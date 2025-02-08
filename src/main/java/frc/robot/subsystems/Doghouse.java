@@ -18,60 +18,50 @@ import frc.robot.util.preferenceconstants.DoublePreferenceConstant;
 
 public class Doghouse extends SubsystemBase {
   /** Creates a new Doghouse. */
-    private DoublePreferenceConstant funnelSlowSpeed = new DoublePreferenceConstant("Doghouse/FunnelSlowSpeed", 0.2);
-    private DoublePreferenceConstant funnelFastSpeed = new DoublePreferenceConstant("Doghouse/FunnelFastSpeed", 1);
-    private DoublePreferenceConstant funnelCurrentLimit = new DoublePreferenceConstant("Doghouse/FunnelCurrentLimit", 20);
+  private DoublePreferenceConstant p_funnelSlowSpeed = new DoublePreferenceConstant("Doghouse/FunnelSlowSpeed", 0.2);
+  private DoublePreferenceConstant p_funnelFastSpeed = new DoublePreferenceConstant("Doghouse/FunnelFastSpeed", 1);
+  private DoublePreferenceConstant p_funnelCurrentLimit = new DoublePreferenceConstant("Doghouse/FunnelCurrentLimit", 20);
 
+  private final DutyCycleOut m_funnelRequest = new DutyCycleOut(0.0);
 
-    private final DutyCycleOut m_funnelRequest = new DutyCycleOut(0.0);
-
-
-
-
-
-
-    private TalonFX m_funnel = new TalonFX(Constants.DOGHOUSE_FUNNEL_MOTOR, "rio");
-
-
+  private TalonFX m_funnel = new TalonFX(Constants.DOGHOUSE_FUNNEL_MOTOR, "rio");
 
   public Doghouse() {
-
-        TalonFXConfiguration doghouseConfiguration = new TalonFXConfiguration();
-        doghouseConfiguration.CurrentLimits.SupplyCurrentLimit = funnelCurrentLimit.getValue();
-        doghouseConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
-        doghouseConfiguration.OpenLoopRamps = new OpenLoopRampsConfigs().withDutyCycleOpenLoopRampPeriod(0);
-        m_funnel.getConfigurator().apply(doghouseConfiguration);
-
+    TalonFXConfiguration doghouseConfiguration = new TalonFXConfiguration();
+    doghouseConfiguration.CurrentLimits.SupplyCurrentLimit = p_funnelCurrentLimit.getValue();
+    doghouseConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
+    doghouseConfiguration.OpenLoopRamps = new OpenLoopRampsConfigs().withDutyCycleOpenLoopRampPeriod(0);
+    m_funnel.getConfigurator().apply(doghouseConfiguration);
 
   }
 
-  public void stopMoving(){
+  public void stopMoving() {
     m_funnel.setControl(m_funnelRequest.withOutput(0));
   }
 
-  public void moveSlow(){
-    m_funnel.setControl(m_funnelRequest.withOutput(funnelSlowSpeed.getValue()));
+  public void moveSlow() {
+    m_funnel.setControl(m_funnelRequest.withOutput(p_funnelSlowSpeed.getValue()));
   }
 
-  public void moveFast(){
-    m_funnel.setControl(m_funnelRequest.withOutput(funnelFastSpeed.getValue()));
+  public void moveFast() {
+    m_funnel.setControl(m_funnelRequest.withOutput(p_funnelFastSpeed.getValue()));
   }
 
-
-
-  public Command stopMovingFactory(){
-    return new RunCommand(()->stopMoving(), this);
+  public Command stopMovingFactory() {
+    return new RunCommand(() -> stopMoving(), this);
   }
-  public Command moveSlowFactory(){
-    return new RunCommand(()->moveSlow(), this);
+
+  public Command moveSlowFactory() {
+    return new RunCommand(() -> moveSlow(), this);
   }
-  public Command moveFastFactory(){
-    return new RunCommand(()->moveFast(), this);
+
+  public Command moveFastFactory() {
+    return new RunCommand(() -> moveFast(), this);
   }
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("Doghouse/Current",m_funnel.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("Doghouse/Current", m_funnel.getStatorCurrent().getValueAsDouble());
 
   }
 }

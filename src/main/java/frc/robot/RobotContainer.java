@@ -47,7 +47,7 @@ public class RobotContainer {
 
     public Climber climber = new Climber();
 
-    private Trigger onDisable = new Trigger(()-> RobotState.isDisabled() && climber.getPositionGasMotor() < 70.0);
+    private Trigger onDisable = new Trigger(() -> RobotState.isDisabled() && climber.getPositionGasMotor() < 70.0);
 
     public Armevator m_armevator = new Armevator();
 
@@ -71,7 +71,7 @@ public class RobotContainer {
         SmartDashboard.putData("Set Coast", climber.setNeutralModeFactory().ignoringDisable(true));
         SmartDashboard.putData("Set Brake", climber.gasMotorBrakeModeFactory().ignoringDisable(true));
         SmartDashboard.putData("Prep Climber", climber.prepClimber());
-        
+
         SmartDashboard.putData("Calibrate Elevator", m_armevator.calibrateElevatorFactory());
         SmartDashboard.putData("Calibrate Arm", m_armevator.calibrateArmFactory());
         SmartDashboard.putData("Set Position Elevator", m_armevator.setElevatorPostionFactory());
@@ -81,26 +81,25 @@ public class RobotContainer {
         SmartDashboard.putData("Slow Speed Arm", m_armevator.setArmSlowSpeedFactory());
         SmartDashboard.putData("Stop Arm", m_armevator.stopArmFactory());
 
-        SmartDashboard.putData("Stop Doghouse",m_doghouse.stopMovingFactory() );
-        SmartDashboard.putData("Slow Doghouse",m_doghouse.moveSlowFactory() );
-        SmartDashboard.putData("Fast Doghouse",m_doghouse.moveFastFactory() );
-
-
+        SmartDashboard.putData("Stop Doghouse", m_doghouse.stopMovingFactory());
+        SmartDashboard.putData("Slow Doghouse", m_doghouse.moveSlowFactory());
+        SmartDashboard.putData("Fast Doghouse", m_doghouse.moveFastFactory());
 
     }
 
     private void configureBindings() {
-        climber.shouldBrake().onTrue(climber.gasMotorBrakeModeFactory().ignoringDisable(true)).onFalse(climber.setNeutralModeFactory().ignoringDisable(true));
+        climber.shouldBrake().onTrue(climber.gasMotorBrakeModeFactory().ignoringDisable(true))
+                .onFalse(climber.setNeutralModeFactory().ignoringDisable(true));
         climber.shouldGripperClose().onTrue(climber.pivotNeutralGrabberClosedFactory());
-        //onDisable.whileTrue(climber.gasMotorBrakeModeFactory()).onTrue(climber.gasMotorBrakeModeFactory());
+        // onDisable.whileTrue(climber.gasMotorBrakeModeFactory()).onTrue(climber.gasMotorBrakeModeFactory());
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
-        //stop.onTrue(climber.gasMotorBrakeModeFactory());
+        // stop.onTrue(climber.gasMotorBrakeModeFactory());
         drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
+                // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
                 drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                        .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
@@ -128,7 +127,7 @@ public class RobotContainer {
     }
 
     public void disableInit() {
-        //climber.gasMotorNeutralMode();
+        // climber.gasMotorNeutralMode();
     }
 
     public Command getAutonomousCommand() {
