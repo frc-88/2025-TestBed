@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants;
 import frc.robot.util.preferenceconstants.DoublePreferenceConstant;
 import frc.robot.util.preferenceconstants.PIDPreferenceConstants;
@@ -127,7 +128,7 @@ public class Armevator extends SubsystemBase {
     }
 
     public void elevatorSetPosition(double position) {
-        m_elevatorMain.setControl(motionmagicrequest.withPosition(position / Constants.ELEVATOR_ROTATIONS_TO_INCHES));
+        m_elevatorMain.setControl(motionmagicrequest.withPosition(position / Constants.ELEVATOR_ROTATIONS_TO_INCHES).withFeedForward(0.056));
     }
 
     public void armSetPosition() {
@@ -186,10 +187,7 @@ public class Armevator extends SubsystemBase {
         return new RunCommand(() -> elevatorSetCalibrateSpeed(), this)
                 .until(() -> elevatorDebouncer
                         .calculate(Math.abs(m_elevatorMain.getVelocity().getValueAsDouble()) < 0.02))
-                .andThen(() -> {
-                    elevatorStop();
-                    elevatorCalibrate();
-                })
+                .andThen(() -> elevatorStop()).andThen(new WaitCommand(0.25)).andThen(() -> elevatorCalibrate())
                 .beforeStarting(() -> elevatorDebouncer.calculate(false));
     }
     
@@ -203,6 +201,10 @@ public class Armevator extends SubsystemBase {
         return new RunCommand(() -> manipulatorIn(), this) 
         .until(()-> m_canRangeMiddle.getIsDetected().getValue())
         .andThen(()-> manipulatorStop())  ;    
+    }
+
+    public Command goToOneInchFactory() {
+        return new RunCommand(() -> elevatorSetPosition(1.0), this);
     }
 
     public Command manipulatorStopFactory() {

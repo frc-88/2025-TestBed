@@ -25,7 +25,7 @@ public class Constants {
     public static final int ARM_RIGHT_CANRANGE = 3;
 
 
-    public static final double ELEVATOR_ROTATIONS_TO_INCHES = 0.885;
+    public static final double ELEVATOR_ROTATIONS_TO_INCHES = ((2.256*Math.PI)/8.0);
     public static final int ARM_ROTATIONS_TO_DEGREES = 0;
 
     // DOGHOUSE

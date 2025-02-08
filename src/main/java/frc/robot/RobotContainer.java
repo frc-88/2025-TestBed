@@ -80,6 +80,7 @@ public class RobotContainer {
         SmartDashboard.putData("Out Manipulator",m_armevator.manipulatorOutFactory());
         SmartDashboard.putData("In Manipulator",m_armevator.manipulatorInFactory());
         SmartDashboard.putData("Stop Manipulator",m_armevator.manipulatorStopFactory());
+        SmartDashboard.putData("Go To One Inch",m_armevator.goToOneInchFacton());
 
         SmartDashboard.putData("Stop Doghouse", m_doghouse.stopMovingFactory());
         SmartDashboard.putData("Slow Doghouse", m_doghouse.moveSlowFactory());
