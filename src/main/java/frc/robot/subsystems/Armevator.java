@@ -17,6 +17,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -61,8 +62,11 @@ public class Armevator extends SubsystemBase {
             private DoublePreferenceConstant p_manipulatorInSpeed = new DoublePreferenceConstant("Armevator/Manipultor/InSpeed", 0.3);
             private DoublePreferenceConstant p_manipulatorOutSpeed = new DoublePreferenceConstant("Armevator/Manipultor/OutSpeed", 0.3);
             private DoublePreferenceConstant p_manipulatorCurrentLimit = new DoublePreferenceConstant("Armevator/Manipultor/CurrentLimit", 20);
+            private DoublePreferenceConstant p_armTiltAngle = new DoublePreferenceConstant("Armevator/Arm/TiltAngle", 5.0);
 
     private MotionMagicVoltage motionmagicrequest = new MotionMagicVoltage(0.0);
+
+    private boolean m_calibrated = false;
 
     public Armevator() {
         configureTalons();
@@ -131,9 +135,32 @@ public class Armevator extends SubsystemBase {
         m_elevatorMain.setControl(motionmagicrequest.withPosition(position / Constants.ELEVATOR_ROTATIONS_TO_INCHES).withFeedForward(0.056));
     }
 
+    public void armGoToTiltAngle() {
+        m_arm.setControl(motionmagicrequest.withPosition(p_armTiltAngle.getValue() / Constants.ARM_ROTATIONS_TO_DEGREES));
+    }
+
     public void armSetPosition() {
         m_arm.setControl(
                 motionmagicrequest.withPosition(p_armTargetDegrees.getValue() / Constants.ARM_ROTATIONS_TO_DEGREES));
+    }
+
+    public void armGoToZero() {
+        m_arm.setControl(motionmagicrequest.withPosition(0.0));
+    }
+
+    public void setL4() {
+        m_elevatorMain.setControl(motionmagicrequest.withPosition(Constants.ELEVATOR_L4_HEIGHT / Constants.ELEVATOR_ROTATIONS_TO_INCHES));
+        m_arm.setControl(motionmagicrequest.withPosition(p_armTiltAngle.getValue() / Constants.ARM_ROTATIONS_TO_DEGREES));
+    }
+
+    public void setL3() {
+        m_elevatorMain.setControl(motionmagicrequest.withPosition(Constants.ELEVATOR_L3_HEIGHT / Constants.ELEVATOR_ROTATIONS_TO_INCHES));
+        m_arm.setControl(motionmagicrequest.withPosition(p_armTiltAngle.getValue() / Constants.ARM_ROTATIONS_TO_DEGREES));
+    }
+
+    public void setL2() {
+        m_elevatorMain.setControl(motionmagicrequest.withPosition(Constants.ELEVATOR_L2_HEIGHT / Constants.ELEVATOR_ROTATIONS_TO_INCHES));
+        m_arm.setControl(motionmagicrequest.withPosition(p_armTiltAngle.getValue() / Constants.ARM_ROTATIONS_TO_DEGREES));
     }
 
     public void elevatorStop() {
@@ -155,10 +182,17 @@ public class Armevator extends SubsystemBase {
         m_manipulator.setControl(new DutyCycleOut(p_manipulatorOutSpeed.getValue()));
     }
 
+    public void backUp() {
+        m_manipulator.setControl(new DutyCycleOut(0.1));
+    }
+
     public void elevatorCalibrate() {
         m_elevatorMain.setPosition(0.0);
     }
 
+    public boolean isArmOnPosition() {
+        return Math.abs(m_arm.getPosition().getValueAsDouble() * Constants.ARM_ROTATIONS_TO_DEGREES - 7.5) < 0.1;
+    }
     public void armCalibrate() {
         m_arm.setPosition(0.0);
     }
@@ -175,6 +209,12 @@ public class Armevator extends SubsystemBase {
         m_elevatorMain.setControl(new DutyCycleOut(-0.09));
     }
 
+    public void stow() {
+        m_elevatorMain.setControl(motionmagicrequest.withPosition(0.0));
+        m_arm.setControl(motionmagicrequest.withPosition(0.0));
+        
+    }
+
     public void armSetSpeed() {
         m_arm.setControl(new DutyCycleOut(-0.09));
     }
@@ -187,7 +227,7 @@ public class Armevator extends SubsystemBase {
         return new RunCommand(() -> elevatorSetCalibrateSpeed(), this)
                 .until(() -> elevatorDebouncer
                         .calculate(Math.abs(m_elevatorMain.getVelocity().getValueAsDouble()) < 0.02))
-                .andThen(() -> elevatorStop()).andThen(new WaitCommand(0.25)).andThen(() -> elevatorCalibrate())
+                .andThen(() -> elevatorStop()).andThen(new WaitCommand(0.25)).andThen(() -> {elevatorCalibrate(); armCalibrate(); m_calibrated = true;})
                 .beforeStarting(() -> elevatorDebouncer.calculate(false));
     }
     
@@ -197,10 +237,13 @@ public class Armevator extends SubsystemBase {
                 .andThen(()-> manipulatorStop() );
     }
 
+    public Command backUpFactory() {
+        return new RunCommand(() -> backUp(), this).until(() -> !m_canRangeMiddle.getIsDetected().getValue()).andThen(() -> manipulatorStop());
+    }
+
     public Command manipulatorInFactory() {
         return new RunCommand(() -> manipulatorIn(), this) 
-        .until(()-> m_canRangeMiddle.getIsDetected().getValue())
-        .andThen(()-> manipulatorStop())  ;    
+        .until(()-> m_canRangeMiddle.getIsDetected().getValue()).andThen(() -> manipulatorStop()).andThen(new WaitCommand(0.05));    
     }
 
     public Command goToOneInchFactory() {
@@ -220,6 +263,18 @@ public class Armevator extends SubsystemBase {
         return new RunCommand(() -> elevatorSetSlowSpeed(), this);
     }
 
+    public Command stowFactory() {
+        return new RunCommand(() -> stow(), this);
+    }
+
+    public Command goToTiltAngleFactory() {
+        return new RunCommand(() -> armGoToTiltAngle(), this).until(this::isArmOnPosition);
+    }
+
+    public Command armGoToZeroFactory() {
+        return new RunCommand(() -> armGoToZero(), this);
+    }
+
     public Command setElevatorPostionFactory() {
         return new RunCommand(() -> elevatorSetPosition(p_elevatorTargetInches.getValue()), this);
     }
@@ -233,12 +288,29 @@ public class Armevator extends SubsystemBase {
     }
 
     public Command setArmPostionFactory() {
-        return new RunCommand(() -> elevatorSetPosition(p_armTargetDegrees.getValue()), this);
+        return new RunCommand(() -> armSetPosition(), this);
+    }
+
+    public Command defaultCommand() {
+        return new ConditionalCommand(stowFactory(), calibrateElevatorFactory(), () -> m_calibrated);
+    }
+
+    public Command L4Factory() {
+        return new RunCommand(() -> setL4(), this);
+    }
+
+    public Command L3Factory() {
+        return new RunCommand(() -> setL3(), this);
+    }
+
+    public Command L2Factory() {
+        return new RunCommand(() -> setL2(), this);
     }
 
     @Override
     public void periodic() {
         SmartDashboard.putNumber("Elevator Positon", m_elevatorMain.getPosition().getValueAsDouble() * Constants.ELEVATOR_ROTATIONS_TO_INCHES);
+        SmartDashboard.putBoolean("Is detected", m_canRangeMiddle.getIsDetected().getValue());
         SmartDashboard.putNumber("Arm Position", m_arm.getPosition().getValueAsDouble() * Constants.ARM_ROTATIONS_TO_DEGREES);
         SmartDashboard.putNumber("CAN Range Left Distance", Units.metersToInches(m_canRangeLeft.getDistance().getValueAsDouble()));
         SmartDashboard.putNumber("CAN Range Middle Distance", Units.metersToInches(m_canRangeMiddle.getDistance().getValueAsDouble()));

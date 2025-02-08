@@ -75,20 +75,26 @@ public class RobotContainer {
         SmartDashboard.putData("Slow Speed Elevator", m_armevator.setElevatorSlowSpeedFactory());
         SmartDashboard.putData("Stop Elevator", m_armevator.stopElevatorFactory());
         SmartDashboard.putData("Set Position Arm", m_armevator.setArmPostionFactory());
+        SmartDashboard.putData("Arm Go To Zero", m_armevator.armGoToZeroFactory());
         SmartDashboard.putData("Slow Speed Arm", m_armevator.setArmSlowSpeedFactory());
         SmartDashboard.putData("Stop Arm", m_armevator.stopArmFactory());
         SmartDashboard.putData("Out Manipulator",m_armevator.manipulatorOutFactory());
         SmartDashboard.putData("In Manipulator",m_armevator.manipulatorInFactory());
         SmartDashboard.putData("Stop Manipulator",m_armevator.manipulatorStopFactory());
         SmartDashboard.putData("Go To One Inch",m_armevator.goToOneInchFactory());
+        SmartDashboard.putData("Go To Tilt Angle", m_armevator.goToTiltAngleFactory());
 
         SmartDashboard.putData("Stop Doghouse", m_doghouse.stopMovingFactory());
         SmartDashboard.putData("Slow Doghouse", m_doghouse.moveSlowFactory());
-        SmartDashboard.putData("Fast Doghouse", new ParallelCommandGroup(m_doghouse.moveFastFactory(), m_armevator.manipulatorInFactory()));
+        SmartDashboard.putData("Fast Doghouse", new ParallelCommandGroup(m_doghouse.moveFastFactory(), m_armevator.manipulatorInFactory().andThen(m_armevator.goToTiltAngleFactory()).andThen(m_armevator.backUpFactory())));
 
+        SmartDashboard.putData("L4", m_armevator.L4Factory());
+        SmartDashboard.putData("L3", m_armevator.L3Factory());
+        SmartDashboard.putData("L2", m_armevator.L2Factory());
     }
 
     private void configureBindings() {
+        m_armevator.setDefaultCommand(m_armevator.defaultCommand());
         climber.shouldBrake().onTrue(climber.gasMotorBrakeModeFactory().ignoringDisable(true))
                 .onFalse(climber.setNeutralModeFactory().ignoringDisable(true));
         climber.shouldGripperClose().onTrue(climber.pivotNeutralGrabberClosedFactory());
