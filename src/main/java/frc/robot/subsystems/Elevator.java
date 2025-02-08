@@ -70,50 +70,69 @@ public class Elevator  extends SubsystemBase {
         m_elevatorFollower.setControl(new Follower(Constants.ELEVATOR_MAIN_MOTOR, false));
     }
 
-    public void setPosition() {
+    public void elevatorSetPosition() {
         m_elevatorMain.setControl(motionmagicrequest.withPosition(p_requestInches.getValue() / Constants.ELEVATOR_ROTATIONS_TO_INCHES).withFeedForward(0.1));
     }
-
-    public void stop() {
-        m_elevatorMain.setControl(new DutyCycleOut(0.0));
+    public void armSetPosition() {
+        m_arm.setControl(motionmagicrequest.withPosition(p_requestInches.getValue() / Constants.ELEVATOR_ROTATIONS_TO_INCHES).withFeedForward(0.1));
     }
 
-    public void calibrate() {
+    public void elevatorStop() {
+        m_elevatorMain.setControl(new DutyCycleOut(0.0));
+    }
+    public void armStop() {
+        m_arm.setControl(new DutyCycleOut(0.0));
+    }
+
+    public void elevatorCalibrate() {
         m_elevatorMain.setPosition(0.0);
         //sm_back.setPosition(0.0);
     }
+    public void armCalibrate() {
+        m_arm.setPosition(0.0);
+        //sm_back.setPosition(0.0);
+    }
 
-    public void setSlowSpeed() {
+    public void elevatorSetSlowSpeed() {
         m_elevatorMain.setControl(new DutyCycleOut(0.1));
     }
-
-    public void setSpeed() {
-        m_elevatorMain.setControl(new DutyCycleOut(-0.09));
+    public void armSetSlowSpeed() {
+        m_arm.setControl(new DutyCycleOut(0.1));
     }
 
-    public Command calibrateFactory() {
-        return new InstantCommand(() -> calibrate(), this);
+    public void elevatorSetSpeed() {
+        m_elevatorMain.setControl(new DutyCycleOut(-0.09));
+    }
+    public void armSetSpeed() {
+        m_arm.setControl(new DutyCycleOut(-0.09));
+    }
+
+    // public Command calibrateFactory() {
+    //     return new InstantCommand(() -> elevatorCalibrate(), this);
+    // }
+    public Command calibrateArmFactory() {
+        return new InstantCommand(() -> armCalibrate(), this);
     }
 
     public Command calibrateElevatorFactory() {
-        return new RunCommand(() -> setSpeed(), this)
+        return new RunCommand(() -> elevatorSetSpeed(), this)
         .until(() -> elevatorDebouncer.calculate(Math.abs(m_elevatorMain.getVelocity().getValueAsDouble())  < 0.02))
         .andThen(() -> {
-            stop();
-            calibrate();
+            elevatorStop();
+            elevatorCalibrate();
         })
         .beforeStarting(() -> elevatorDebouncer.calculate(false));
     }
 
     public Command stopFactory() {
-        return new RunCommand(() -> stop(), this);
+        return new RunCommand(() -> elevatorStop(), this);
     }
 
     public Command setSlowSpeedFactory() {
-        return new RunCommand(() -> setSlowSpeed(), this);
+        return new RunCommand(() -> elevatorSetSlowSpeed(), this);
     }
     public Command setPostionFactory() {
-        return new RunCommand(() -> setPosition(), this);
+        return new RunCommand(() -> elevatorSetPosition(), this);
     }    
 
     @Override

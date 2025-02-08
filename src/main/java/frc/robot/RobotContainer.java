@@ -69,11 +69,10 @@ public class RobotContainer {
         SmartDashboard.putData("Set Brake", climber.gasMotorBrakeModeFactory().ignoringDisable(true));
         SmartDashboard.putData("Prep Climber", climber.prepClimber());
         
-        SmartDashboard.putData("Calibrate", m_elevator.calibrateElevatorFactory());
-        SmartDashboard.putData("CalibrateBoth", m_elevator.calibrateFactory());
-        SmartDashboard.putData("Set Position", m_elevator.setPostionFactory());
-        SmartDashboard.putData("Slow Speed", m_elevator.setSlowSpeedFactory());
-        SmartDashboard.putData("Stop", m_elevator.stopFactory());
+        SmartDashboard.putData("Calibrate Elevator", m_elevator.calibrateElevatorFactory());
+        SmartDashboard.putData("Set Position Elevator", m_elevator.setPostionFactory());
+        SmartDashboard.putData("Slow Speed Elevator", m_elevator.setSlowSpeedFactory());
+        SmartDashboard.putData("Stop Elevator", m_elevator.stopFactory());
     }
 
     private void configureBindings() {
