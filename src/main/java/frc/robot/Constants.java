@@ -29,5 +29,5 @@ public class Constants {
     public static final double ELEVATOR_ROTATIONS_TO_INCHES = 0.885;
 
     // DOGHOUSE
-    public static final int DOGHOUSE_MOTOR = 6;
+    public static final int DOGHOUSE_FUNNEL_MOTOR = 6;
 }

@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Doghouse;
 import frc.robot.subsystems.Armevator;
 
 public class RobotContainer {
@@ -49,6 +50,8 @@ public class RobotContainer {
     private Trigger onDisable = new Trigger(()-> RobotState.isDisabled() && climber.getPositionGasMotor() < 70.0);
 
     public Armevator m_armevator = new Armevator();
+
+    public Doghouse m_doghouse = new Doghouse();
     //public Trigger stop = new Trigger(() -> RobotState.isDisabled() && climber.getPositionGasMotor() < 5.0);
 
     public RobotContainer() {
@@ -74,6 +77,13 @@ public class RobotContainer {
         SmartDashboard.putData("Set Position Elevator", m_armevator.setPostionFactory());
         SmartDashboard.putData("Slow Speed Elevator", m_armevator.setSlowSpeedFactory());
         SmartDashboard.putData("Stop Elevator", m_armevator.stopFactory());
+
+        SmartDashboard.putData("Stop Doghouse",m_doghouse.stopMovingFactory() );
+        SmartDashboard.putData("Slow Doghouse",m_doghouse.moveSlowFactory() );
+        SmartDashboard.putData("Fast Doghouse",m_doghouse.moveFastFactory() );
+
+
+
     }
 
     private void configureBindings() {
