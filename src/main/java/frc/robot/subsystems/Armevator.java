@@ -1,12 +1,15 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
+import com.ctre.phoenix6.configs.OpenLoopRampsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.TalonFXS;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
@@ -23,6 +26,8 @@ public class Armevator extends SubsystemBase {
     private TalonFX m_elevatorMain = new TalonFX(Constants.ELEVATOR_MAIN_MOTOR, Constants.RIO_CANBUS);
     private TalonFX m_elevatorFollower = new TalonFX(Constants.ELEVATOR_FOLLOWER_MOTOR, Constants.RIO_CANBUS);
     private TalonFX m_arm = new TalonFX(Constants.ELEVATOR_ARM_MOTOR, Constants.RIO_CANBUS);
+    private TalonFXS m_manipulator = new  TalonFXS(Constants.ELEVATOR_MANIPULATOR_MOTOR, Constants.RIO_CANBUS);
+
 
     private final CANrange m_canRangeLeft = new CANrange(Constants.ARM_LEFT_CANRANGE, Constants.RIO_CANBUS);
     private final CANrange m_canRangeMiddle = new CANrange(Constants.ARM_MIDDLE_CANRANGE, Constants.RIO_CANBUS);
@@ -48,6 +53,11 @@ public class Armevator extends SubsystemBase {
     private DoublePreferenceConstant p_armJerk = new DoublePreferenceConstant("Armevator/Arm/MotionMagicJerk", 0.0);
     private DoublePreferenceConstant p_armTargetDegrees = new DoublePreferenceConstant(
             "Armevator/Arm/TargetPositionDegrees", 0.0);
+
+
+            private DoublePreferenceConstant p_manipulatorInSpeed = new DoublePreferenceConstant("Armevator/Manipultor/InSpeed", 0.3);
+            private DoublePreferenceConstant p_manipulatorOutSpeed = new DoublePreferenceConstant("Armevator/Manipultor/OutSpeed", 0.3);
+            private DoublePreferenceConstant p_manipulatorCurrentLimit = new DoublePreferenceConstant("Armevator/Manipultor/CurrentLimit", 20);
 
     private MotionMagicVoltage motionmagicrequest = new MotionMagicVoltage(0.0);
 
@@ -81,6 +91,12 @@ public class Armevator extends SubsystemBase {
         TalonFXConfiguration maincfg = new TalonFXConfiguration();
         TalonFXConfiguration followercfg = new TalonFXConfiguration();
         TalonFXConfiguration armcfg = new TalonFXConfiguration();
+        
+        TalonFXSConfiguration manipulatorConfiguration = new TalonFXSConfiguration();
+        manipulatorConfiguration.CurrentLimits.SupplyCurrentLimit = p_manipulatorCurrentLimit.getValue();
+        manipulatorConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
+        manipulatorConfiguration.OpenLoopRamps = new OpenLoopRampsConfigs().withDutyCycleOpenLoopRampPeriod(0);
+        m_manipulator.getConfigurator().apply(manipulatorConfiguration);
 
         maincfg.Slot0.kP = elevatorPID.getKP().getValue();
         maincfg.Slot0.kI = elevatorPID.getKI().getValue();
@@ -123,6 +139,17 @@ public class Armevator extends SubsystemBase {
     public void armStop() {
         m_arm.setControl(new DutyCycleOut(0.0));
     }
+    public void manipulatorStop(){
+        m_manipulator.setControl(new DutyCycleOut(0.0));
+    }
+
+    public void manipulatorIn(){
+        m_manipulator.setControl(new DutyCycleOut(p_manipulatorInSpeed.getValue()));
+    }
+
+    public void manipulatorOut(){
+        m_manipulator.setControl(new DutyCycleOut(p_manipulatorOutSpeed.getValue()));
+    }
 
     public void elevatorCalibrate() {
         m_elevatorMain.setPosition(0.0);
@@ -162,6 +189,23 @@ public class Armevator extends SubsystemBase {
                 })
                 .beforeStarting(() -> elevatorDebouncer.calculate(false));
     }
+    
+    public Command manipulatorOutFactory() {
+        return new RunCommand(() -> manipulatorOut(), this) 
+                .withTimeout(1.0)
+                .andThen(()-> manipulatorStop() );
+    }
+
+    public Command manipulatorInFactory() {
+        return new RunCommand(() -> manipulatorIn(), this) 
+        .until(()-> m_canRangeMiddle.getIsDetected().getValue())
+        .andThen(()-> manipulatorStop())  ;    
+    }
+
+    public Command manipulatorStopFactory() {
+        return new InstantCommand(() -> manipulatorStop(), this) ;  
+    }
+
 
     public Command stopElevatorFactory() {
         return new RunCommand(() -> elevatorStop(), this);

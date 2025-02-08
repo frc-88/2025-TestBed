@@ -76,6 +76,9 @@ public class RobotContainer {
         SmartDashboard.putData("Set Position Arm", m_armevator.setArmPostionFactory());
         SmartDashboard.putData("Slow Speed Arm", m_armevator.setArmSlowSpeedFactory());
         SmartDashboard.putData("Stop Arm", m_armevator.stopArmFactory());
+        SmartDashboard.putData("Out Manipulator",m_armevator.manipulatorOutFactory());
+        SmartDashboard.putData("In Manipulator",m_armevator.manipulatorInFactory());
+        SmartDashboard.putData("Stop Manipulator",m_armevator.manipulatorStopFactory());
 
         SmartDashboard.putData("Stop Doghouse", m_doghouse.stopMovingFactory());
         SmartDashboard.putData("Slow Doghouse", m_doghouse.moveSlowFactory());
