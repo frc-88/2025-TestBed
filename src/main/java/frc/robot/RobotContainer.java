@@ -86,7 +86,10 @@ public class RobotContainer {
 
         SmartDashboard.putData("Stop Doghouse", m_doghouse.stopMovingFactory());
         SmartDashboard.putData("Slow Doghouse", m_doghouse.moveSlowFactory());
-        SmartDashboard.putData("Fast Doghouse", new ParallelCommandGroup(m_doghouse.moveFastFactory(), m_armevator.manipulatorInFactory().andThen(m_armevator.goToTiltAngleFactory()).andThen(m_armevator.backUpFactory())));
+        SmartDashboard.putData("Fast Doghouse", new ParallelCommandGroup(m_doghouse.moveFastFactory(),
+         m_armevator.manipulatorInFactory()
+         .andThen(m_armevator.goToTiltAngleFactory())
+         .andThen(m_armevator.backUpFactory())));
 
         SmartDashboard.putData("L4", m_armevator.L4Factory());
         SmartDashboard.putData("L3", m_armevator.L3Factory());

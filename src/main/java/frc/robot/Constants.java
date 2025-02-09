@@ -15,9 +15,9 @@ public class Constants {
     public static final double GAS_MOTOR_ROTATIONS_TO_LENGTH = (1.39 / 28.0);
     public static final double CLIMBER_ENCODER_ROTATIONS_TO_ANGLE = 360;
 
-    public static final double ARM_L4_ANGLE = 20.0;
+    public static final double ARM_L4_ANGLE = 24.5;
 
-    public static final double ELEVATOR_L4_HEIGHT = 25.2;
+    public static final double ELEVATOR_L4_HEIGHT = 28.0;
     public static final double ELEVATOR_L3_HEIGHT = 13.25;
     public static final double ELEVATOR_L2_HEIGHT = 5.3;
 
