@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -18,17 +17,12 @@ import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.MagnetHealthValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.fasterxml.jackson.databind.ser.std.CalendarSerializer;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotState;
-import edu.wpi.first.wpilibj.simulation.DIOSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -36,7 +30,6 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
-import frc.robot.Robot;
 import frc.robot.util.preferenceconstants.DoublePreferenceConstant;
 import frc.robot.util.preferenceconstants.PIDPreferenceConstants;
 
@@ -74,9 +67,6 @@ public class Climber extends SubsystemBase {
   private final TalonFX m_gripper = new TalonFX(Constants.CLIMBER_GRIPPER_MOTOR, Constants.RIO_CANBUS);
   private final TalonFX m_gasmotor = new TalonFX(Constants.CLIMBER_GAS_MOTOR, Constants.RIO_CANBUS);
   private final CANcoder m_climberEncoder = new CANcoder(Constants.CLIMBER_ENCODER, Constants.RIO_CANBUS);
-  private final CANrange m_canRangeLeft = new CANrange(Constants.CLIMBER_LEFT_CANRANGE, Constants.RIO_CANBUS);
-  private final CANrange m_canRangeMiddle = new CANrange(Constants.CLIMBER_MIDDLE_CANRANGE, Constants.RIO_CANBUS);
-  private final CANrange m_canRangeRight = new CANrange(Constants.CLIMBER_RIGHT_CANRANGE, Constants.RIO_CANBUS);
 
   private DigitalInput input = new DigitalInput(0);
 
@@ -110,23 +100,6 @@ public class Climber extends SubsystemBase {
       TalonFXConfiguration grippercfg = new TalonFXConfiguration();
       TalonFXConfiguration gasmotorcfg = new TalonFXConfiguration();
       //CANcoderConfiguration cfg = new CANcoderConfiguration();
-      CANrangeConfiguration canRangemiddlecfg = new CANrangeConfiguration();
-      CANrangeConfiguration canRangeleftcfg = new CANrangeConfiguration();
-      CANrangeConfiguration canRangerightcfg = new CANrangeConfiguration();
-      canRangemiddlecfg.FovParams.FOVRangeX = 6.5;
-      canRangeleftcfg.FovParams.FOVRangeX = 6.5;
-      canRangerightcfg.FovParams.FOVRangeX = 6.5;
-      canRangemiddlecfg.FovParams.FOVRangeY = 27.0;
-      canRangeleftcfg.FovParams.FOVRangeY = 27.0;
-      canRangerightcfg.FovParams.FOVRangeY = 27.0;
-
-      canRangeleftcfg.ToFParams.UpdateFrequency = 50;
-      canRangerightcfg.ToFParams.UpdateFrequency = 50;
-      canRangemiddlecfg.ToFParams.UpdateFrequency = 50;
-      
-      canRangeleftcfg.ProximityParams.ProximityThreshold = 0.5;
-      canRangemiddlecfg.ProximityParams.ProximityThreshold = 0.5;
-      canRangerightcfg.ProximityParams.ProximityThreshold = 0.5;
   
       MotionMagicConfigs pivot_mm = pivotcfg.MotionMagic;
       MotionMagicConfigs gripper_mm = grippercfg.MotionMagic;
@@ -187,10 +160,6 @@ public class Climber extends SubsystemBase {
       m_gasmotor.setNeutralMode(NeutralModeValue.Brake);
 
       m_gripper.setNeutralMode(NeutralModeValue.Brake);   
-
-      m_canRangeLeft.getConfigurator().apply(canRangeleftcfg);
-      m_canRangeRight.getConfigurator().apply(canRangerightcfg);
-      m_canRangeMiddle.getConfigurator().apply(canRangemiddlecfg);
     }
 
     public Trigger shouldGripperClose() {
@@ -375,9 +344,6 @@ public class Climber extends SubsystemBase {
     SmartDashboard.putNumber("gas motor desired position", p_gasmotorPositionInches.getValue() / Constants.GAS_MOTOR_ROTATIONS_TO_LENGTH);
     SmartDashboard.putNumber("Encoder position", m_climberEncoder.getPosition().getValueAsDouble());
     SmartDashboard.putNumber("Climber Angle", getAngleOfClimber());
-    SmartDashboard.putNumber("CAN Range Left Distance", Units.metersToInches(m_canRangeLeft.getDistance().getValueAsDouble()));
-    SmartDashboard.putNumber("CAN Range Middle Distance", Units.metersToInches(m_canRangeMiddle.getDistance().getValueAsDouble()));
-    SmartDashboard.putNumber("CAN Range Right Distance", Units.metersToInches(m_canRangeRight.getDistance().getValueAsDouble()));
     SmartDashboard.putBoolean("Sensor ouput", input.get());
   }
 }
